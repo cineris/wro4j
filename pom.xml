@@ -69,12 +69,6 @@
 		<maven.test.compile.encoding>UTF-8</maven.test.compile.encoding>
 	</properties>
 
-    <repositories>
-        <repository>
-                <id>code_snapshots</id>
-                <url>http://code/artifacts/content/repositories/snapshots/</url>
-        </repository>
-    </repositories>
 
 	<dependencyManagement>
 		<dependencies>
