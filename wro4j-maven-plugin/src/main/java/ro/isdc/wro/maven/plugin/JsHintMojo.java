@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.Iterator;
 
 import ro.isdc.wro.WroRuntimeException;
 import ro.isdc.wro.extensions.processor.js.JsHintProcessor;
@@ -54,6 +56,22 @@ public class JsHintMojo
    */
   private int failThreshold = 0;
   /**
+   * Allows mixed tabs and whitespace without reporting them
+   * 
+   * @parameter expression=${messy}
+   * @optional
+   */
+  private boolean messy = false;
+  /**
+   * Determines whether the processor should halt after the failThreshold is met,
+   * or if it should keep processing all files, then fail.
+   * 
+   * @parameter expression=${failFast}
+   * @optional
+   */
+  private boolean failFast = false;
+  
+  /**
    * Counts total number of processed resources.
    */
   private int totalResources = 0;
@@ -76,7 +94,7 @@ public class JsHintMojo
       public void process(final Resource resource, final Reader reader, final Writer writer)
           throws IOException {
         totalResources++;
-        getLog().info("processing resource: " + resource);
+        getLog().info("processing resource: " + resource.getUri());
         // use StringWriter to discard the merged processed result (linting is useful only for reporting errors).
         super.process(resource, reader, new StringWriter());
       }
@@ -88,21 +106,65 @@ public class JsHintMojo
 
       @Override
       protected void onLinterException(final LinterException e, final Resource resource) {
-        final String errorMessage = String.format("%s errors found while processing resource: %s. Errors are: %s", e
-            .getErrors().size(), resource, e.getErrors());
-        totalResourcesWithErrors++;
-        totalFoundErrors += e.getErrors().size();
-        getLog().error(errorMessage);
-        // collect found errors
-        addReport(ResourceLintReport.create(resource.getUri(), e.getErrors()));
-        if (!isFailNever()) {
-          if (totalFoundErrors >= failThreshold) {
-            throw new WroRuntimeException("Errors found when validating resource: " + resource);
-          }
-        }
+    	Collection<LinterError> errors;
+	    if (messy) {
+    		errors = removeMixedWhitespaceErrors(e);
+    	} else {
+    		errors = e.getErrors();
+    	}
+	    if (errors.size() > 0) {
+	        final String errorMessage = String.format("%s errors found while processing resource: %s. Errors are: %s",
+	        		errors.size(), resource.getUri(), formatErrorOutput(errors, resource.getUri()));
+	        totalResourcesWithErrors++;
+	        totalFoundErrors += errors.size();
+	        getLog().error(errorMessage);
+	        // collect found errors
+	        addReport(ResourceLintReport.create(resource.getUri(), errors));
+	        if (!isFailNever()) {
+	          if (isFailAllowed()) {
+	            throw new WroRuntimeException("Errors found when validating resource: " + resource.getUri());
+	          }
+	        }
+	    }
       };
     }.setOptionsAsString(getOptions());
     return processor;
+  }
+  
+  private String formatErrorOutput(Collection<LinterError> errors, String resource) {
+	  StringBuilder sb = new StringBuilder();
+	  
+	  for (LinterError err : errors) {
+		  sb.append('\n');
+		  sb.append("[ERROR] " + resource + ": " + err.getLine() + ":" + err.getCharacter() + " " + err.getReason() + "\n");
+		  sb.append("[ERROR] " + err.getEvidence().replaceAll("\t",  "    ") + "\n");
+		  sb.append("[ERROR] " + String.format("%" + err.getCharacter() + "s", "^"));
+	  }
+	  
+	  return sb.toString();
+  }
+  
+  private Collection<LinterError> removeMixedWhitespaceErrors(LinterException e) {
+	  Collection<LinterError> errors = e.getErrors();
+	  Iterator<LinterError> i = errors.iterator();
+	  
+	  while (i.hasNext()) {
+		  LinterError err = i.next();
+		  if (err.getReason().equals("Mixed spaces and tabs.")) {
+			  i.remove();
+		  }
+	  }
+	  
+	  return errors;
+  }
+  
+  protected final boolean isFailAllowed() {
+    return failFast && isStatusFailed();
+  }
+  
+  private boolean isStatusFailed() {
+    final int foundErrors = totalFoundErrors;
+    return !isFailNever() && foundErrors > 0 && (foundErrors >= failThreshold);
   }
 
   /**
@@ -113,6 +175,7 @@ public class JsHintMojo
     totalFoundErrors = 0;
     totalResources = 0;
     totalResourcesWithErrors = 0;
+    getLog().info("messy: " + messy);
     super.onBeforeExecute();
   }
 
@@ -121,8 +184,9 @@ public class JsHintMojo
    */
   @Override
   protected void onAfterExecute() {
-    logSummary();
     super.onAfterExecute();
+    logSummary();
+    checkFailStatus();
   }
 
   private void logSummary() {
@@ -132,6 +196,15 @@ public class JsHintMojo
     getLog().info(String.format("Total number of processed resources: %s", totalResources));
     getLog().info(message);
     getLog().info("----------------------------------------\n");
+  }
+  
+  /**
+   * Check whether the build should fail.
+   */
+  private void checkFailStatus() {
+    if (!failFast && isStatusFailed()) {
+      throw new WroRuntimeException("Build status: failed.");
+    }
   }
 
   /**
