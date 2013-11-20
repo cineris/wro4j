@@ -9,7 +9,6 @@
 
 	<name>wro4j parent</name>
 	<inceptionYear>2008</inceptionYear>
-	<url>http://code.google.com/p/wro4j/</url>
 
 	<description>
      The purpose of this project is to reduce the number of requests 
@@ -17,11 +16,6 @@
      achieving drastic improvement of loading times. The resources can be benefit 
      also from minification and compression.
     </description>
-
-	<issueManagement>
-		<system>googleCode</system>
-		<url>http://code.google.com/p/wro4j/issues/list</url>
-	</issueManagement>
 
 	<licenses>
 		<license>
@@ -32,18 +26,9 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:git:git://github.com/alexo/wro4j.git</connection>
-		<developerConnection>scm:git:git://github.com/alexo/wro4j.git</developerConnection>
-		<url>http://github.com/alexo/wro4j.git</url>
+		<connection>scm:git:ssh://git@code/pui/jshint.git</connection>
+		<developerConnection>scm:git:ssh://git@code/pui/jshint.git</developerConnection>
 	</scm>
-
-	<mailingLists>
-		<mailingList>
-			<name>Discussion Group</name>
-			<post>wro4j@googlegroups.com</post>
-			<archive>http://groups.google.com/group/wro4j</archive>
-		</mailingList>
-	</mailingLists>
 
 	<developers>
 		<developer>
