@@ -170,7 +170,7 @@ public class DefaultWildcardStreamLocator
       throws IOException {
     LOG.debug("wildcard resources: {}", allFiles);
     if (allFiles.isEmpty()) {
-      final String message = String.format("No resource found for wildcard: %s", wildcardContext.getWildcard());
+      final String message = String.format("No resource found for wildcard: %s", wildcardContext.getUri());
       LOG.warn(message);
       throw new IOException(message);
     }

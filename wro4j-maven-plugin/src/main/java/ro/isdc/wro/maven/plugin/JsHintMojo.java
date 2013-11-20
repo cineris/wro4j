@@ -70,6 +70,14 @@ public class JsHintMojo
    * @optional
    */
   private boolean failFast = false;
+  /**
+   * Specifies the maximum number of errors to allow before stopping to process the
+   * project. This can also be specified as an option to JSHint directly as maxerr.
+   * 
+   * @parameter expression=${maxErr}
+   * @optional
+   */
+  private int maxErr = 100000;
   
   /**
    * Counts total number of processed resources.
@@ -112,6 +120,7 @@ public class JsHintMojo
     	} else {
     		errors = e.getErrors();
     	}
+	    getLog().info("errors.size() = " + errors.size());
 	    if (errors.size() > 0) {
 	        final String errorMessage = String.format("%s errors found while processing resource: %s. Errors are: %s",
 	        		errors.size(), resource.getUri(), formatErrorOutput(errors, resource.getUri()));
@@ -127,20 +136,18 @@ public class JsHintMojo
 	        }
 	    }
       };
-    }.setOptionsAsString(getOptions());
+    }.setOptionsAsString("maxerr=" + maxErr + ", " + getOptions());
     return processor;
   }
   
   private String formatErrorOutput(Collection<LinterError> errors, String resource) {
 	  StringBuilder sb = new StringBuilder();
-	  
 	  for (LinterError err : errors) {
 		  sb.append('\n');
 		  sb.append("[ERROR] " + resource + ": " + err.getLine() + ":" + err.getCharacter() + " " + err.getReason() + "\n");
-		  sb.append("[ERROR] " + err.getEvidence().replaceAll("\t",  "    ") + "\n");
+		  sb.append("[ERROR] " + (err.getEvidence() != null ? err.getEvidence().replaceAll("\t",  "    ") : "null") + "\n");
 		  sb.append("[ERROR] " + String.format("%" + err.getCharacter() + "s", "^"));
 	  }
-	  
 	  return sb.toString();
   }
   
@@ -148,8 +155,9 @@ public class JsHintMojo
 	  Collection<LinterError> errors = e.getErrors();
 	  Iterator<LinterError> i = errors.iterator();
 	  
+	  LinterError err = null;
 	  while (i.hasNext()) {
-		  LinterError err = i.next();
+		  err = i.next();
 		  if (err.getReason().equals("Mixed spaces and tabs.")) {
 			  i.remove();
 		  }
@@ -176,6 +184,7 @@ public class JsHintMojo
     totalResources = 0;
     totalResourcesWithErrors = 0;
     getLog().info("messy: " + messy);
+    getLog().info("maxErr: " + maxErr);
     super.onBeforeExecute();
   }
 
