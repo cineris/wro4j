@@ -102,7 +102,7 @@ public class JsHintMojo
       public void process(final Resource resource, final Reader reader, final Writer writer)
           throws IOException {
         totalResources++;
-        getLog().info("processing resource: " + resource.getUri());
+        getLog().info("{Processing resource: " + resource.getUri());
         // use StringWriter to discard the merged processed result (linting is useful only for reporting errors).
         super.process(resource, reader, new StringWriter());
       }
@@ -120,7 +120,6 @@ public class JsHintMojo
     	} else {
     		errors = e.getErrors();
     	}
-	    getLog().info("errors.size() = " + errors.size());
 	    if (errors.size() > 0) {
 	        final String errorMessage = String.format("%s errors found while processing resource: %s. Errors are: %s",
 	        		errors.size(), resource.getUri(), formatErrorOutput(errors, resource.getUri()));
