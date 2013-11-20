@@ -10,6 +10,12 @@
 	<name>wro4j parent</name>
 	<inceptionYear>2008</inceptionYear>
 
+    <parent>
+            <groupId>code</groupId>
+            <artifactId>code-parent</artifactId>
+            <version>22</version>
+    </parent>
+
 	<description>
      The purpose of this project is to reduce the number of requests 
      needed to load a page and the amount of data to transfer to clients, 
@@ -456,18 +462,6 @@
 					</plugin>
 				</plugins>
 			</build>
-			<distributionManagement>
-				<repository>
-					<id>sonatype-nexus-staging</id>
-					<name>Nexus Release Repository</name>
-					<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-				</repository>
-				<snapshotRepository>
-					<id>sonatype-nexus-snapshots</id>
-					<name>Sonatype Nexus Snapshots</name>
-					<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-				</snapshotRepository>
-			</distributionManagement>
 		</profile>
 	</profiles>
 	<!-- Repository for third party libraries <repositories> <repository> <id>Sonatype</id> 
